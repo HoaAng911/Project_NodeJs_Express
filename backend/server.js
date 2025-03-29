@@ -2,6 +2,7 @@ import express from 'express';
 import authRoutes from './routes/auth.route.js';
 import movieRoutes from './routes/movie.route.js';
 import tvRoutes from './routes/tv.route.js';
+import searchRoutes from './routes/search.route.js';
 import { ENV_VARS } from './config/envVars.js';
 import { ConnectDB } from './config/db.js';
 import cookieParser from 'cookie-parser';
@@ -28,7 +29,7 @@ app.use((req, res, next) => {
 app.use("/api/v1/auth", authRoutes); // Route không bảo vệ
 app.use("/api/v1/movie", protectRoute, movieRoutes); // Route bảo vệ bởi protectRoute
 app.use("/api/v1/tv", protectRoute, tvRoutes); // Route bảo vệ bởi protectRoute
-
+app.use("/api/v1/search", protectRoute, searchRoutes);
 // Khởi động server
 app.listen(PORT, () => {
     console.log('Server started at http://localhost:' + PORT);
