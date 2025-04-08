@@ -30,6 +30,7 @@ app.use("/api/v1/auth", authRoutes); // Route không bảo vệ
 app.use("/api/v1/movie", protectRoute, movieRoutes); // Route bảo vệ bởi protectRoute
 app.use("/api/v1/tv", protectRoute, tvRoutes); // Route bảo vệ bởi protectRoute
 app.use("/api/v1/search", protectRoute, searchRoutes);
+
 // Khởi động server
 app.listen(PORT, () => {
     console.log('Server started at http://localhost:' + PORT);

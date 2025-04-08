@@ -23,6 +23,11 @@ const userSchema = mongoose.Schema({
     searchHistory: {
         type: Array,       // Lưu lịch sử tìm kiếm của người dùng dưới dạng mảng  
         default: []        // Mặc định là một mảng rỗng nếu chưa có dữ liệu  
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
     }
 });
 

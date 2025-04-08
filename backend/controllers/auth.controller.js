@@ -153,3 +153,90 @@ export async function logout(req, res) {
         });
     }
 }
+// authCheck là một controller function dùng để kiểm tra tình trạng xác thực của người dùng.
+export async function authCheck(req, res) {
+    try {
+        // In ra đối tượng req.user để kiểm tra thông tin người dùng đã được xác thực
+        console.log("req.user:", req.user);
+
+        // Trả về phản hồi JSON với trạng thái 200 (OK) và thông tin người dùng
+        res.status(200).json({ success: true, user: req.user });
+    } catch (error) {
+        // Nếu có lỗi xảy ra trong quá trình kiểm tra xác thực, in ra lỗi trong console để dễ dàng debug
+        console.log("Error in authCheck controller", error.message);
+
+        // Trả về phản hồi lỗi với trạng thái 500 (Internal Server Error) và thông báo lỗi chung
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+// Hàm xử lý cập nhật thông tin người dùng
+export async function updateUserInfo(req, res) {
+    try {
+        const { username, email, password, image } = req.body; // Thêm image
+        const userId = req.user.id;
+
+        if (!username && !email && !password && !image) {
+            return res.status(400).json({ success: false, message: 'Vui lòng cung cấp ít nhất một thông tin cần cập nhật' });
+        }
+
+        if (email) {
+            const existingUserByEmail = await User.findOne({ email });
+            if (existingUserByEmail && existingUserByEmail._id.toString() !== userId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Email đã được sử dụng. Vui lòng chọn email khác!"
+                });
+            }
+        }
+
+        if (username) {
+            const existingUserByUsername = await User.findOne({ username });
+            if (existingUserByUsername && existingUserByUsername._id.toString() !== userId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Tên người dùng đã tồn tại. Vui lòng chọn tên khác!"
+                });
+            }
+        }
+
+        let hashedPassword;
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            hashedPassword = await bcrypt.hash(password, salt);
+        }
+
+        // Danh sách avatar hợp lệ (giới hạn trong PROFILE_PICS)
+        const PROFILE_PICS = ["/avatar1.png", "/avatar2.png", "/avatar3.png"];
+        const validImage = image && PROFILE_PICS.includes(image) ? image : undefined;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                username: username || undefined,
+                email: email || undefined,
+                password: hashedPassword || undefined,
+                image: validImage || undefined, // Chỉ cập nhật nếu image hợp lệ
+            },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "Người dùng không tìm thấy" });
+        }
+
+        res.status(200).json({
+            success: true,
+            user: {
+                ...updatedUser._doc,
+                password: "",
+            }
+        });
+    } catch (err) {
+        console.log('Lỗi trong controller cập nhật thông tin người dùng:', err.message);
+        return res.status(500).json({
+            success: false,
+            message: "Lỗi máy chủ nội bộ. Vui lòng thử lại sau!"
+        });
+    }
+}
